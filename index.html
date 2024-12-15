@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f9f9f9;
+    }
+
+    .a4 {
+        width: 210mm;
+        height: 297mm;
+        margin: auto;
+        padding: 10mm;
+        box-sizing: border-box;
+        border: 15px solid #8B0000; /* Outer border */
+        position: relative;
+        background: #fff;
+    }
+
+    .a4::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('https://spacesaturn.in/images/logo.png'); /* Watermark URL */
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 70%; /* Adjust size of the watermark */
+        opacity: 0.1; /* Make watermark subtle */
+        pointer-events: none; /* Ensure it doesn't interfere with clicks */
+        z-index: 0;
+    }
+
+    .inner-border {
+        border: 2px dashed #8B0000; /* Inner border */
+        padding: 10mm;
+        height: calc(100% - 20mm);
+        box-sizing: border-box;
+        position: relative;
+        z-index: 1; /* Ensure content is above the watermark */
+    }
+
+    .header {
+        text-align: center;
+    }
+
+    .header img {
+        height: 60px;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 24px;
+        color: #8B0000;
+    }
+
+    .header p {
+        font-size: 12px;
+        margin: 5px 0;
+    }
+
+    .info {
+        margin-top: 20px;
+    }
+
+    .info table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .info td {
+        padding: 5px;
+        vertical-align: top;
+    }
+
+    .info td:first-child {
+        width: 35%;
+        font-weight: bold;
+    }
+
+    .marks-section {
+        margin-top: 20px;
+    }
+
+    .marks-section table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+    .marks-section th,
+    .marks-section td {
+        border: 1px solid #000;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .totals {
+        margin-top: 20px;
+        text-align: right;
+        font-size: 14px;
+    }
+
+    .footer {
+        position: relative;
+        /* position: absolute; */
+        bottom: 20mm;
+        /* width: calc(100% - 40mm); */
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    .a4 {
+display: flex;
+flex-direction: column; /* Ensure children are stacked vertically */
+}
+
+.inner-border {
+flex: 1; /* Let the content take up available space */
+display: flex;
+flex-direction: column; /* Ensure proper stacking of sections */
+}
+
+    .footer .logos {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .footer .logos img {
+        height: 50px;
+    }
+
+    .footer p {
+        font-size: 12px;
+    }
+
+    #download-btn {
+        margin: 20px;
+        display: block;
+        text-align: center;
+    }
+    .grade-info {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .grade-item {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+    }
+    .grade-item span {
+        display: block;
+        font-weight: normal;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>    
+    async function downloadPDF() {
+console.log("download button clicked")
+const { jsPDF } = window.jspdf;
+
+const element = document.querySelector('.a4');
+const canvas = await html2canvas(element, { 
+    scale: 2,
+    useCORS: true,  // Enable CORS support
+});
+
+const imgData = canvas.toDataURL('image/png');
+const pdf = new jsPDF('p', 'mm', 'a4');
+
+const pdfWidth = pdf.internal.pageSize.getWidth();
+const pdfHeight = pdf.internal.pageSize.getHeight();
+
+pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+pdf.save('marksheet.pdf');
+}
+
+</script>
+<script>
+    // Calculate Total Marks and Percentage
+    document.addEventListener("DOMContentLoaded", function () {
+        const marksTable = document.querySelector(".marks-section table tbody").rows;
+
+        let totalFullMarks = 0;
+        let totalObtainedMarks = 0;
+
+        for (let row of marksTable) {
+            const fullMarks = parseInt(row.cells[1].innerText); // Full Marks column
+            const obtainedMarks = parseInt(row.cells[2].innerText); // Marks Obtained column
+
+            totalFullMarks += fullMarks;
+            totalObtainedMarks += obtainedMarks;
+        }
+
+        // Calculate percentage
+        const percentage = ((totalObtainedMarks / totalFullMarks) * 100).toFixed(2);
+
+        // Update DOM
+        document.getElementById("total-marks").innerHTML = `<strong>Total Marks:</strong> ${totalObtainedMarks} / ${totalFullMarks}`;
+document.getElementById("percentage").innerHTML = `<strong>Percentage:</strong> ${percentage}%`;
+
+        // document.getElementById("total-marks").innerText = `Total Marks: ${totalObtainedMarks} / ${totalFullMarks}`;
+        // document.getElementById("percentage").innerText = `Percentage: ${percentage}%`;
+    });
+</script>
+  
+  <script>
+    function handleFormSubmit(event) {
+      event.preventDefault(); // Prevent the form from submitting normally
+     
+      // Get the values entered in the form
+      var awardedTo = document.getElementById('awarded_to').value;
+      var center = document.getElementById('center').value;
+      var enrollmentNo = document.getElementById('enrollment_no').value;
+      var certificateNo = document.getElementById('certificate_no').value;
+      var course = document.getElementById('course').value;
+      var parentType = document.getElementById('parent_type').value;
+      var motherName = document.getElementById('mother_name').value;
+      var computerFundamentals = parseFloat(document.getElementById('computer_fundamentals').value) || 0;
+  var msWord = parseFloat(document.getElementById('ms_word').value) || 0;
+  var msExcel = parseFloat(document.getElementById('ms_excel').value) || 0;
+  var msPowerpoint = parseFloat(document.getElementById('ms_powerpoint').value) || 0;
+  var msOutlookInternet = parseFloat(document.getElementById('ms_outlook_internet').value) || 0;
+  var msAccess = parseFloat(document.getElementById('ms_access').value) || 0;
+  var manualAccountTally = parseFloat(document.getElementById('manual_account_tally').value) || 0;
+  // var pagemaker = parseFloat(document.getElementById('pagemaker').value) || 0;
+  // var photoshop = parseFloat(document.getElementById('photoshop').value) || 0;
+  var coreldraw = parseFloat(document.getElementById('coreldraw').value) || 0;
+  var marketingSoftSkill = parseFloat(document.getElementById('marketing_soft_skill').value) || 0;
+  var session = document.getElementById('session').value;
+
+  // Total Marks and Percentage Calculation
+  var total_marks  = computerFundamentals + msWord + msExcel + msPowerpoint + msOutlookInternet + msAccess + manualAccountTally +  coreldraw + marketingSoftSkill;
+  var maxMarks = 900; // Set the total maximum marks
+  var percentage = (total_marks / maxMarks) * 100; // Calculate percentage
+  percentage = Math.floor(percentage * 100) / 100;
+
+      // Hide the form
+      document.getElementById('form-container').style.display = 'none';
+  
+      document.getElementById('thank-you-message').innerHTML = `<body>
+    <button id="download-btn" onclick="downloadPDF()">Download as PDF</button>
+
+    <div class="a4">
+        <div class="inner-border">
+            <div class="header">
+              <a href="https://imgbb.com/"><img src="https://i.ibb.co/GdgyQKL/Whats-App-Image-2024-12-11-at-1-25-25-AM.jpg" alt="Whats-App-Image-2024-12-11-at-1-25-25-AM" border="0"></a>
+                <!-- <img src="https://ibb.co/vV24N4W" alt="Logo"> -->
+                <b><h1>LANIXABYTE by (SPACESATURN)</h1></b>
+                <strong><p>Registered under the ordnance,ministry of corporate  affairs  government of India,
+[Pursuant to sub-section (2) of section 7 and sub-section (1) of section 8 of the Companies Act. 2013 (18 of 2013) and nile 18 of the Companies (Incorporation) Rules, 2014]</p></strong>
+                <strong>Marksheet</strong>
+            </div>
+
+            <div class="info">
+                <table>
+                    <tr>
+                        <td>Awarded to :</td>
+                        <td>${awardedTo}</td>
+                    </tr>
+                    <tr>
+                        <td>Enrollment No. :</td>
+                        <td>${enrollmentNo}</td>
+                    </tr>
+                    <tr>
+                        <td>Certificate No. :</td>
+                        <td>${certificateNo}</td>
+                    </tr>
+                    <tr>
+                        <td>Course :</td>
+                        <td>${course}</td>
+                    </tr>
+                    <tr>
+                        <td>S/O, D/O, H/O, W/O :</td>
+                        <td>${parentType}</td>
+                    </tr>
+                    <tr>
+                        <td>Mother's Name :</td>
+                        <td>${motherName}</td>
+                    </tr>
+                    <tr>
+                        <td>Sesion :</td>
+                        <td>${session}</td>
+                    </tr>
+                    <tr>
+                        <td>Center :</td>
+                        <td>${center}</td>
+                    </tr>
+                    <tr>
+                        <td>Grade :</td>
+                        <td>${percentage>=85 ? 'A+' : (percentage>=75 ? 'A' : (percentage>=55 ? 'B' : 'C'))}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="marks-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subjects Offered</th>
+                            <th>Full Marks</th>
+                            <th>Marks Obtained</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>COMPUTER FUNDAMENTAL & WINDOWS</td>
+                            <td>100</td>
+                            <td>${computerFundamentals}</td>
+                        </tr>
+                        <tr>
+                            <td>MS WORD</td>
+                            <td>100</td>
+                            <td>${msWord}</td>
+                        </tr>
+                        <tr>
+                            <td>MS EXCEL</td>
+                            <td>100</td>
+                            <td>${msExcel}</td>
+                        </tr>
+                        <tr>
+                            <td>MS POWERPOINT</td>
+                            <td>100</td>
+                            <td>${msPowerpoint}</td>
+                        </tr>
+                        <tr>
+                            <td>MS OUTLOOK & INTERNET</td>
+                            <td>100</td>
+                            <td>${msOutlookInternet}</td>
+                        </tr>
+                        <tr>
+                            <td>MS ACCESS</td>
+                            <td>100</td>
+                            <td>${msAccess}</td>
+                        </tr>
+                        <tr>
+                            <td>MANUAL ACCOUNT & TALLY</td>
+                            <td>100</td>
+                            <td>${manualAccountTally}</td>
+                        </tr>
+                        <tr>
+                            <td>PAGEMAKER, PHOTOSHOP, CORELDRAW & GST</td>
+                            <td>100</td>
+                            <td>${coreldraw}</td>
+                        </tr>
+                        <tr>
+                            <td>MARKETING (SOFT SKILL)</td>
+                            <td>100</td>
+                            <td>${marketingSoftSkill}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="totals">
+                <p><strong>Total Marks:</strong> ${total_marks} / 900</p>
+                <p><strong>Percentage:</strong> ${percentage} %</p>
+                <!-- <ul style="list-style-type: none">
+                    <li><strong>Grade A+</strong>: 85% & Above</li>
+                    <li><strong>Grade A</strong>: 75% to 84%</li>
+                    <li><strong>Grade B</strong>: 55% to 70%</li>
+                    <li><strong>Grade C</strong>: 40% to 54%</li>
+                </ul> -->
+            </div>
+           
+            <div class="footer">
+                <div class="logos">
+                    <a href="https://ibb.co/L0SW34x"><img src="https://i.ibb.co/8mMpHFr/mohar.jpg" alt="mohar" border="0" style="margin-right: 10px;"/></a>
+                    <a href="https://ibb.co/QDp7stC"><img src="https://i.ibb.co/J3mWXgy/20241208-165359.jpg" alt="20241208-165359" border="0" style="margin-right: 10px;"></a>
+                    <a href="https://ibb.co/yQ0zMqc"><img src="https://i.ibb.co/fxM3KHz/1200px-ISO-9001-2015-svg.png" alt="1200px-ISO-9001-2015-svg" border="0" style="margin-right: 10px;"></a>
+                    <!-- <img src="https://picsum.photos/536/354" alt="Footer Logo" width="100px", height="100px"> -->
+                </div>
+                <div>
+                    <br>Certified and Verified by LANIXABYTE,
+                    <br> GSTIN: 10AAFCL8772J1ZB <br>CIN: U85499BR2024PTC070021</p>
+                </div>
+                <div class="grade-info">
+                   
+                    <div class="grade-item">
+                        Grade A+ <span>85% & Above</span>
+                    </div>
+                    <div class="grade-item">
+                        Grade A <span>75% to 84%</span>
+                    </div>
+                    <div class="grade-item">
+                        Grade B <span>55% to 74%</span>
+                    </div>
+                    <div class="grade-item">
+                        Grade C <span>40% to 54%</span>
+                    </div>
+                </div>
+
+            </div>
+            
+        </div>
+    </div>
+</body>`;
+      document.getElementById('thank-you-message').style.display = 'block';
+    }
+  </script>
+</head>
+<body>
+
+<div class="container" id="form-container">
+  <h2>Marksheet Form</h2>
+  <form class="form-horizontal" onsubmit="handleFormSubmit(event)">
+    <!-- Awarded To -->
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="awarded_to">Awarded To:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="awarded_to" placeholder="Enter name" name="awarded_to">
+      </div>
+    </div>
+
+    <!-- Enrollment No -->
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="enrollment_no">Enrollment No:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="enrollment_no" placeholder="Enter Enrollment No" name="enrollment_no">
+      </div>
+    </div>
+
+    <!-- Certificate No -->
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="certificate_no">Certificate No:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="certificate_no" placeholder="Enter Certificate No" name="certificate_no">
+      </div>
+    </div>
+
+    <!-- Course -->
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="course">Course:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="course" placeholder="Enter course" name="course">
+      </div>
+    </div>
+
+    <!-- S/O, D/O, H/O, W/O -->
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="parent_type">S/O, D/O, H/O, W/O:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="parent_type" placeholder="Enter S/O, D/O, H/O, W/O" name="parent_type">
+      </div>
+    </div>
+
+    <!-- Mother's Name -->
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="mother_name">Mother's Name:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="mother_name" placeholder="Enter Mother's name" name="mother_name">
+      </div>
+    </div>
+
+        <!-- Session -->
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="mother_name">Session:</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="session" placeholder="Enter session" name="session">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="center">Center:</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="center" placeholder="Enter center" name="center">
+          </div>
+        </div>
+
+    <!-- Courses (Text Fields for each) -->
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="computer_fundamentals">COMPUTER FUNDAMENTAL & WINDOWS:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="computer_fundamentals" placeholder="Enter status or score" name="computer_fundamentals">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="ms_word">MS WORD:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="ms_word" placeholder="Enter status or score" name="ms_word">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="ms_excel">MS EXCEL:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="ms_excel" placeholder="Enter status or score" name="ms_excel">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="ms_powerpoint">MS POWERPOINT:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="ms_powerpoint" placeholder="Enter status or score" name="ms_powerpoint">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="ms_outlook_internet">MS OUTLOOK & INTERNET:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="ms_outlook_internet" placeholder="Enter status or score" name="ms_outlook_internet">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="ms_access">MS ACCESS:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="ms_access" placeholder="Enter status or score" name="ms_access">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="manual_account_tally">MANUAL ACCOUNT & TALLY:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="manual_account_tally" placeholder="Enter status or score" name="manual_account_tally">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="coreldraw">PAGEMAKER, PHOTOSHOP, CORELDRAW & GST:</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="coreldraw" placeholder="Enter status or score" name="coreldraw">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="control-label col-sm-2" for="marketing_soft_skill">MARKETING (SOFT SKILL):</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="marketing_soft_skill" placeholder="Enter status or score" name="marketing_soft_skill">
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-default">Submit</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Thank You Message Container -->
+<div id="thank-you-message" style="display:none; padding: 20px;">
+</div>
+
+</body>
+</html>
